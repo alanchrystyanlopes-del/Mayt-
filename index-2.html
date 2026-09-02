@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TikTok Link</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:#000; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  overflow:hidden;
+}
+/* Background */
+.bg { position:fixed; inset:0; background:#000; z-index:0; }
+.bg::before {
+  content:''; position:absolute; width:500px; height:500px;
+  background:radial-gradient(circle,rgba(254,44,85,.18) 0%,transparent 70%);
+  top:-120px; left:-120px; animation:d1 9s ease-in-out infinite alternate;
+}
+.bg::after {
+  content:''; position:absolute; width:500px; height:500px;
+  background:radial-gradient(circle,rgba(32,213,236,.14) 0%,transparent 70%);
+  bottom:-120px; right:-120px; animation:d2 11s ease-in-out infinite alternate;
+}
+@keyframes d1 { to { transform:translate(70px,90px); } }
+@keyframes d2 { to { transform:translate(-70px,-90px); } }
+
+/* Main */
+#mainScreen {
+  position:relative; z-index:1;
+  display:flex; flex-direction:column; align-items:center; gap:36px;
+}
+.logo { display:flex; align-items:center; gap:10px; }
+.logo-text { font-size:26px; font-weight:800; color:#fff; letter-spacing:-.5px; }
+.btn-wrap { position:relative; }
+.shadow-c {
+  position:absolute; inset:0; border-radius:50px; background:#20d5ec;
+  transform:translate(-4px,-4px); transition:transform .15s;
+}
+.shadow-r {
+  position:absolute; inset:0; border-radius:50px; background:#fe2c55;
+  transform:translate(4px,4px); transition:transform .15s;
+}
+.btn-wrap:hover .shadow-c { transform:translate(-7px,-7px); }
+.btn-wrap:hover .shadow-r { transform:translate(7px,7px); }
+.main-btn {
+  position:relative; z-index:1;
+  display:flex; align-items:center; gap:12px;
+  background:#fff; color:#000; border:none; border-radius:50px;
+  padding:18px 52px; font-size:18px; font-weight:800;
+  cursor:pointer; letter-spacing:.2px; transition:transform .15s;
+}
+.main-btn:active { transform:scale(.97); }
+
+/* Overlay */
+#overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.85);
+  backdrop-filter:blur(14px); display:none;
+  align-items:center; justify-content:center; z-index:50;
+}
+#overlay.show { display:flex; }
+
+/* Browser */
+.browser {
+  width:92%; max-width:420px; background:#1c1c1e; border-radius:18px;
+  overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,.9);
+  animation:popIn .35s cubic-bezier(.34,1.56,.64,1);
+  display:flex; flex-direction:column;
+}
+@keyframes popIn {
+  from { transform:scale(.75) translateY(30px); opacity:0; }
+  to   { transform:scale(1)   translateY(0);    opacity:1; }
+}
+.b-chrome {
+  background:#2c2c2e; padding:12px 14px;
+  display:flex; align-items:center; gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.06); flex-shrink:0;
+}
+.tls { display:flex; gap:6px; flex-shrink:0; }
+.tl { width:12px; height:12px; border-radius:50%; opacity:.85; }
+.tl-r { background:#ff5f57; } .tl-y { background:#ffbd2e; } .tl-g { background:#28ca41; }
+.addr {
+  flex:1; background:rgba(255,255,255,.07); border-radius:7px;
+  padding:5px 10px; font-size:10.5px; color:rgba(255,255,255,.55);
+  display:flex; align-items:center; gap:6px; overflow:hidden;
+  font-family:"SF Mono",Menlo,monospace;
+}
+.addr-text { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.b-content {
+  position:relative; flex:1;
+  display:flex; align-items:center; justify-content:center;
+  min-height:300px;
+}
+#loadState {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:14px; z-index:2; background:#1c1c1e;
+}
+.spinner {
+  width:34px; height:34px;
+  border:3px solid rgba(255,255,255,.1); border-top-color:#fe2c55;
+  border-radius:50%; animation:spin .8s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+#loadMsg { font-size:12px; color:rgba(255,255,255,.4); }
+#loadError { font-size:12px; color:#ff5f57; display:none; text-align:center; padding:0 20px; line-height:1.5; }
+
+#realFrame {
+  width:100%; height:300px; border:none;
+  display:none; flex-shrink:0;
+}
+.b-status {
+  background:rgba(255,255,255,.02); border-top:1px solid rgba(255,255,255,.05);
+  padding:7px 14px; font-size:10px; color:rgba(255,255,255,.3);
+  min-height:26px; display:flex; align-items:center; flex-shrink:0;
+}
+
+/* Auto cursor */
+#autoCursor {
+  position:fixed; font-size:26px; pointer-events:none; z-index:200;
+  opacity:0; line-height:1;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.8));
+  transition:left .7s cubic-bezier(.25,.46,.45,.94),
+             top .7s cubic-bezier(.25,.46,.45,.94),
+             opacity .3s;
+}
+#autoCursor.visible { opacity:1; }
+
+/* Flash */
+#flash {
+  position:fixed; inset:0; background:rgba(32,213,236,.1);
+  z-index:999; opacity:0; pointer-events:none; transition:opacity .25s;
+}
+#flash.on { opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<!-- MAIN -->
+<div id="mainScreen">
+  <div class="logo">
+    <svg width="34" height="34" viewBox="0 0 48 48" fill="none">
+      <path d="M34 6c.7 4.2 3.2 7 7 8v6c-2.5 0-4.8-.7-7-2v13c0 7.2-5.8 13-13 13S8 38.2 8 31s5.8-13 13-13c.7 0 1.3.1 2 .2V25c-.7-.2-1.3-.3-2-.3-3.9 0-7 3.1-7 7s3.1 7 7 7 7-3.1 7-7V6h6z" fill="#fff"/>
+    </svg>
+    <span class="logo-text">TikTok</span>
+  </div>
+
+  <div class="btn-wrap">
+    <div class="shadow-c"></div>
+    <div class="shadow-r"></div>
+    <button class="main-btn" onclick="start()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#000"><path d="M8 5v14l11-7z"/></svg>
+      Abrir no TikTok
+    </button>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div id="overlay">
+  <div class="browser">
+    <div class="b-chrome">
+      <div class="tls">
+        <span class="tl tl-r"></span>
+        <span class="tl tl-y"></span>
+        <span class="tl tl-g"></span>
+      </div>
+      <div class="addr">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="2.5">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <span class="addr-text" id="addrText">tiktoklinksafety.com</span>
+      </div>
+    </div>
+
+    <div class="b-content">
+      <div id="loadState">
+        <div class="spinner"></div>
+        <p id="loadMsg">Carregando página real...</p>
+        <p id="loadError"></p>
+      </div>
+      <iframe
+        id="realFrame"
+        sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-same-origin"
+      ></iframe>
+    </div>
+
+    <div class="b-status" id="statusBar">Iniciando...</div>
+  </div>
+</div>
+
+<div id="autoCursor">👆</div>
+<div id="flash"></div>
+
+<script>
+const TARGET = 'https://beacons.ai/maitelinks';
+const codes = [
+  "ad","ae","af","ag","ai","al","am","ao","aq","ar","as","at","au","aw","ax","az",
+  "ba","bb","bd","be","bf","bg","bh","bi","bj","bl","bm","bn","bo","bq","br","bs",
+  "bt","bv","bw","by","bz","ca","cc","cd","cf","cg","ch","ci","ck","cl","cm","cn",
+  "co","cr","cu","cv","cw","cx","cy","cz","de","dj","dk","dm","do","dz","ec","ee",
+  "eg","eh","er","es","et","fi","fj","fk","fm","fo","fr","ga","gb","gd","ge","gf",
+  "gg","gh","gi","gl","gm","gn","gp","gq","gr","gs","gt","gu","gw","gy","hk","hm",
+  "hn","hr","ht","hu","id","ie","il","im","in","io","iq","ir","is","it","je","jm",
+  "jo","jp","ke","kg","kh","ki","km","kn","kp","kr","kw","ky","kz","la","lb","lc",
+  "li","lk","lr","ls","lt","lu","lv","ly","ma","mc","md","me","mf","mg","mh","mk",
+  "ml","mm","mn","mo","mp","mq","mr","ms","mt","mu","mv","mw","mx","my","mz","na",
+  "nc","ne","nf","ng","ni","nl","no","np","nr","nu","nz","om","pa","pe","pf","pg",
+  "ph","pk","pl","pm","pn","pr","ps","pt","pw","py","qa","re","ro","rs","ru","rw",
+  "sa","sb","sc","sd","se","sg","sh","si","sj","sk","sl","sm","sn","so","sr","ss",
+  "st","sv","sx","sy","sz","tc","td","tf","tg","th","tj","tk","tl","tm","tn","to",
+  "tr","tt","tv","tw","tz","ua","ug","um","us","uy","uz","va","vc","ve","vg","vi",
+  "vn","vu","wf","ws","ye","yt","za","zm","zw"
+];
+
+let isFirstLoad = true;
+let currentTarget = TARGET;
+
+// Script injetado no HTML real — intercepta cliques e auto-clica no botão vermelho
+function buildInjected(targetUrl) {
+  return '<scr' + 'ipt>(function(){'
+    + 'var TARGET="' + targetUrl + '";'
+    + 'function isExternal(u){return u&&u.startsWith("http")&&u.indexOf("tiktoklinksafety")===-1;}'
+    // Interceptar window.open
+    + 'var _open=window.open;'
+    + 'window.open=function(u,t,f){'
+    +   'if(isExternal(u)){window.parent.postMessage({type:"nav",url:u},"*");return null;}'
+    +   'return _open.call(window,u,t,f);};'
+    // Interceptar clicks
+    + 'document.addEventListener("click",function(e){'
+    +   'var el=e.target.closest("a,button,[role=button],[onclick]");'
+    +   'if(!el)return;'
+    +   'var href=el.href||el.getAttribute("data-href")||el.getAttribute("data-url")||"";'
+    +   'if(isExternal(href)){e.preventDefault();e.stopPropagation();window.parent.postMessage({type:"nav",url:href},"*");}'
+    + '},true);'
+    // Auto-click no botão principal
+    + 'function autoClick(){'
+    +   'var best=null,bestScore=-1;'
+    +   'document.querySelectorAll("button,a[href],[role=button],[onclick]").forEach(function(el){'
+    +     'var s=window.getComputedStyle(el);'
+    +     'var bg=s.backgroundColor;'
+    +     'var rgb=bg.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);'
+    +     'var text=el.textContent.toLowerCase().trim();'
+    +     'var score=0;'
+    +     'if(rgb){var r=+rgb[1],g=+rgb[2],b=+rgb[3];if(r>180&&g<120)score+=10;}'
+    +     'if(/continue|confirm|proceed|open|yes|ok|sim|confirmar|continuar|abrir|prosseguir|visit|entrar|go/.test(text))score+=6;'
+    +     'var rect=el.getBoundingClientRect();'
+    +     'if(rect.width>60&&rect.height>28&&rect.top>=0&&rect.bottom<=window.innerHeight)score+=3;'
+    +     'if(score>bestScore){bestScore=score;best=el;}'
+    +   '});'
+    +   'if(best&&bestScore>0){'
+    +     'best.scrollIntoView({behavior:"smooth",block:"center"});'
+    +     'setTimeout(function(){'
+    +       'best.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true}));'
+    +       'var href=best.href||best.getAttribute("data-href")||"";'
+    +       'if(isExternal(href))window.parent.postMessage({type:"nav",url:href},"*");'
+    +     '},700);'
+    +   '}else{'
+    +     'setTimeout(function(){window.parent.postMessage({type:"nav",url:TARGET},"*");},2500);'
+    +   '}'
+    + '}'
+    + 'if(document.readyState==="loading")'
+    +   'document.addEventListener("DOMContentLoaded",function(){setTimeout(autoClick,1000);});'
+    + 'else setTimeout(autoClick,1000);'
+    + '})();<\/scr' + 'ipt>';
+}
+
+async function fetchPage(url) {
+  // Tenta corsproxy.io primeiro, depois allorigins como fallback
+  const proxies = [
+    async () => {
+      const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+      if (!r.ok) throw new Error('corsproxy status ' + r.status);
+      return r.text();
+    },
+    async () => {
+      const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
+      if (!r.ok) throw new Error('allorigins status ' + r.status);
+      const d = await r.json();
+      return d.contents;
+    }
+  ];
+
+  for (const proxy of proxies) {
+    try { return await proxy(); } catch(e) { console.warn('Proxy falhou:', e); }
+  }
+  throw new Error('Todos os proxies falharam');
+}
+
+async function start() {
+  const code = codes[Math.floor(Math.random() * codes.length)];
+  const safeUrl = 'https://www.tiktoklinksafety.com/link/?aid=1233&lang=' + code
+    + '&scene=link_sticker&jumper_version=1&target=' + encodeURIComponent(TARGET);
+
+  // Reset UI
+  isFirstLoad = true;
+  const iframe = document.getElementById('realFrame');
+  iframe.src = 'about:blank';
+  iframe.style.display = 'none';
+  document.getElementById('loadState').style.display = 'flex';
+  document.getElementById('loadMsg').style.display = 'block';
+  document.getElementById('loadMsg').textContent = 'Buscando página real...';
+  document.getElementById('loadError').style.display = 'none';
+  document.getElementById('addrText').textContent = 'tiktoklinksafety.com/link/?lang=' + code + '...';
+  document.getElementById('statusBar').textContent = 'Conectando via proxy...';
+  document.getElementById('autoCursor').classList.remove('visible');
+  document.getElementById('overlay').classList.add('show');
+
+  try {
+    let html = await fetchPage(safeUrl);
+
+    // Base tag para resolver assets relativos
+    const base = '<base href="https://www.tiktoklinksafety.com/">';
+    html = html.replace(/<head[^>]*>/i, '$&' + base);
+
+    // Remove X-Frame-Options e CSP do HTML (inline meta tags)
+    html = html.replace(/<meta[^>]*x-frame-options[^>]*>/gi, '');
+    html = html.replace(/<meta[^>]*content-security-policy[^>]*>/gi, '');
+
+    // Injeta script de auto-click antes do </body>
+    const injected = buildInjected(TARGET);
+    html = html.indexOf('</body>') !== -1
+      ? html.replace('</body>', injected + '</body>')
+      : html + injected;
+
+    // Cria blob e carrega no iframe
+    const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
+    const blobUrl = URL.createObjectURL(blob);
+
+    document.getElementById('statusBar').textContent = 'Renderizando · lang=' + code;
+
+    iframe.onload = function() {
+      if (isFirstLoad) {
+        isFirstLoad = false;
+        URL.revokeObjectURL(blobUrl);
+        document.getElementById('loadState').style.display = 'none';
+        iframe.style.display = 'block';
+        document.getElementById('statusBar').textContent = 'Página carregada · Clicando automaticamente no botão...';
+        // Mostra cursor autônomo
+        showCursor(iframe);
+      } else {
+        // iframe navegou (botão clicado)
+        try {
+          var loc = iframe.contentWindow.location.href;
+          if (loc && loc !== 'about:blank' && loc.indexOf('tiktoklinksafety') === -1) {
+            window.open(loc, '_blank');
+            closeOverlay();
+          }
+        } catch(e) {
+          // Cross-origin = navegou para o link externo
+          window.open(TARGET, '_blank');
+          closeOverlay();
+        }
+      }
+    };
+
+    iframe.src = blobUrl;
+
+  } catch(err) {
+    document.getElementById('loadMsg').style.display = 'none';
+    const errEl = document.getElementById('loadError');
+    errEl.style.display = 'block';
+    errEl.textContent = 'Não foi possível carregar a página real (' + err.message + ')';
+    document.getElementById('statusBar').textContent = 'Erro · Verifique conexão';
+  }
+}
+
+// Cursor se move autonomamente para o botão do iframe
+function showCursor(iframe) {
+  const cursor = document.getElementById('autoCursor');
+  const rect = iframe.getBoundingClientRect();
+
+  // Começa no canto inferior direito do mini browser
+  cursor.style.transition = 'opacity .3s';
+  cursor.style.left = (rect.right - 40) + 'px';
+  cursor.style.top  = (rect.bottom - 40) + 'px';
+  cursor.classList.add('visible');
+
+  // Move para o centro do iframe (onde provavelmente está o botão vermelho)
+  setTimeout(function() {
+    cursor.style.transition = 'left .8s cubic-bezier(.25,.46,.45,.94), top .8s cubic-bezier(.25,.46,.45,.94), opacity .3s';
+    cursor.style.left = (rect.left + rect.width * 0.5 - 12) + 'px';
+    cursor.style.top  = (rect.top  + rect.height * 0.72) + 'px';
+  }, 400);
+
+  // Simula clique (animação)
+  setTimeout(function() {
+    cursor.style.fontSize = '20px';
+    setTimeout(function() { cursor.style.fontSize = '26px'; }, 200);
+  }, 1400);
+}
+
+// Escuta mensagens do iframe (botão clicado)
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'nav') {
+    var url = e.data.url || TARGET;
+    window.open(url, '_blank');
+
+    // Flash + fechar
+    var flash = document.getElementById('flash');
+    flash.classList.add('on');
+    setTimeout(function() { flash.classList.remove('on'); }, 300);
+
+    closeOverlay();
+  }
+});
+
+function closeOverlay() {
+  document.getElementById('autoCursor').classList.remove('visible');
+  document.getElementById('statusBar').textContent = 'Link aberto no navegador ✓';
+  setTimeout(function() {
+    document.getElementById('overlay').classList.remove('show');
+    document.getElementById('realFrame').src = 'about:blank';
+    document.getElementById('realFrame').style.display = 'none';
+    document.getElementById('loadState').style.display = 'flex';
+    document.getElementById('loadMsg').textContent = 'Carregando página real...';
+    document.getElementById('loadMsg').style.display = 'block';
+    document.getElementById('loadError').style.display = 'none';
+  }, 700);
+}
+</script>
+</body>
+</html>
