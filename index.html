@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abrir Link</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+  }
+
+  /* Fundo animado estilo TikTok */
+  .bg {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 0;
+  }
+  .bg::before {
+    content: '';
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(254,44,85,0.15) 0%, transparent 70%);
+    top: -100px;
+    left: -100px;
+    animation: drift1 8s ease-in-out infinite alternate;
+  }
+  .bg::after {
+    content: '';
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(32,213,236,0.12) 0%, transparent 70%);
+    bottom: -100px;
+    right: -100px;
+    animation: drift2 10s ease-in-out infinite alternate;
+  }
+  @keyframes drift1 { to { transform: translate(60px, 80px); } }
+  @keyframes drift2 { to { transform: translate(-60px, -80px); } }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 36px;
+  }
+
+  /* Logo TikTok */
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+  }
+  .logo-text {
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+
+  /* Botão principal */
+  .btn-wrap {
+    position: relative;
+  }
+
+  /* Sombra ciano (offset para esquerda) */
+  .btn-shadow-cyan {
+    position: absolute;
+    inset: 0;
+    border-radius: 50px;
+    background: #20d5ec;
+    transform: translate(-4px, -4px);
+    transition: transform 0.15s ease;
+  }
+
+  /* Sombra vermelha (offset para direita) */
+  .btn-shadow-red {
+    position: absolute;
+    inset: 0;
+    border-radius: 50px;
+    background: #fe2c55;
+    transform: translate(4px, 4px);
+    transition: transform 0.15s ease;
+  }
+
+  /* Botão real */
+  .btn {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 50px;
+    padding: 18px 48px;
+    font-size: 18px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 0.2px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .btn:hover .btn-shadow-cyan { transform: translate(-6px, -6px); }
+  .btn:hover .btn-shadow-red  { transform: translate(6px, 6px); }
+
+  .btn:active {
+    transform: scale(0.97);
+  }
+
+  /* Ícone play */
+  .play-icon {
+    width: 22px;
+    height: 22px;
+    fill: #000;
+  }
+
+  /* Badge código sorteado */
+  .badge {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 999px;
+    padding: 6px 18px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    text-align: center;
+  }
+  .badge span {
+    color: #20d5ec;
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+
+  /* Ripple */
+  @keyframes ripple {
+    to { transform: scale(4); opacity: 0; }
+  }
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.15);
+    width: 60px;
+    height: 60px;
+    margin-top: -30px;
+    margin-left: -30px;
+    animation: ripple 0.6s linear;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<div class="container">
+
+  <!-- Logo -->
+  <div class="logo">
+    <svg class="logo-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M34 6c.7 4.2 3.2 7 7 8v6c-2.5 0-4.8-.7-7-2v13c0 7.2-5.8 13-13 13S8 38.2 8 31s5.8-13 13-13c.7 0 1.3.1 2 .2V25c-.7-.2-1.3-.3-2-.3-3.9 0-7 3.1-7 7s3.1 7 7 7 7-3.1 7-7V6h6z" fill="#fff"/>
+      <path d="M34 6c.7 4.2 3.2 7 7 8v6c-2.5 0-4.8-.7-7-2v13c0 7.2-5.8 13-13 13" stroke="#fe2c55" stroke-width="1.5" fill="none"/>
+      <path d="M34 6c.7 4.2 3.2 7 7 8" stroke="#20d5ec" stroke-width="1.5" fill="none"/>
+    </svg>
+    <span class="logo-text">TikTok</span>
+  </div>
+
+  <!-- Botão -->
+  <div class="btn-wrap">
+    <div class="btn-shadow-cyan"></div>
+    <div class="btn-shadow-red"></div>
+    <button class="btn" id="mainBtn" onclick="openLink(event)">
+      <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      Abrir no TikTok
+    </button>
+  </div>
+
+  <!-- Badge país -->
+  <div class="badge" id="badge">aguardando clique</div>
+
+</div>
+
+<script>
+  const codes = [
+    "ad","ae","af","ag","ai","al","am","ao","aq","ar","as","at","au","aw","ax","az",
+    "ba","bb","bd","be","bf","bg","bh","bi","bj","bl","bm","bn","bo","bq","br","bs",
+    "bt","bv","bw","by","bz","ca","cc","cd","cf","cg","ch","ci","ck","cl","cm","cn",
+    "co","cr","cu","cv","cw","cx","cy","cz","de","dj","dk","dm","do","dz","ec","ee",
+    "eg","eh","er","es","et","fi","fj","fk","fm","fo","fr","ga","gb","gd","ge","gf",
+    "gg","gh","gi","gl","gm","gn","gp","gq","gr","gs","gt","gu","gw","gy","hk","hm",
+    "hn","hr","ht","hu","id","ie","il","im","in","io","iq","ir","is","it","je","jm",
+    "jo","jp","ke","kg","kh","ki","km","kn","kp","kr","kw","ky","kz","la","lb","lc",
+    "li","lk","lr","ls","lt","lu","lv","ly","ma","mc","md","me","mf","mg","mh","mk",
+    "ml","mm","mn","mo","mp","mq","mr","ms","mt","mu","mv","mw","mx","my","mz","na",
+    "nc","ne","nf","ng","ni","nl","no","np","nr","nu","nz","om","pa","pe","pf","pg",
+    "ph","pk","pl","pm","pn","pr","ps","pt","pw","py","qa","re","ro","rs","ru","rw",
+    "sa","sb","sc","sd","se","sg","sh","si","sj","sk","sl","sm","sn","so","sr","ss",
+    "st","sv","sx","sy","sz","tc","td","tf","tg","th","tj","tk","tl","tm","tn","to",
+    "tr","tt","tv","tw","tz","ua","ug","um","us","uy","uz","va","vc","ve","vg","vi",
+    "vn","vu","wf","ws","ye","yt","za","zm","zw"
+  ];
+
+  const target = "https%3A%2F%2Fbeacons.ai%2Fmaitelinks";
+
+  function openLink(e) {
+    // Ripple
+    const btn = document.getElementById("mainBtn");
+    const r = document.createElement("span");
+    r.className = "ripple";
+    const rect = btn.getBoundingClientRect();
+    r.style.left = (e.clientX - rect.left) + "px";
+    r.style.top  = (e.clientY - rect.top) + "px";
+    btn.appendChild(r);
+    setTimeout(() => r.remove(), 600);
+
+    // Sortear código
+    const code = codes[Math.floor(Math.random() * codes.length)];
+
+    // Atualizar badge
+    const badge = document.getElementById("badge");
+    badge.innerHTML = `lang=<span>${code}</span>`;
+
+    // Montar e abrir link
+    const url = `https://www.tiktoklinksafety.com/link/?aid=1233&lang=${code}&scene=link_sticker&jumper_version=1&target=${target}`;
+    window.open(url, "_blank");
+  }
+</script>
+
+</body>
+</html>
