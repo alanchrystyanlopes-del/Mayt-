@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TikTok Link</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:#000; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  overflow:hidden;
+}
+.bg { position:fixed; inset:0; background:#000; z-index:0; }
+.bg::before {
+  content:''; position:absolute; width:500px; height:500px;
+  background:radial-gradient(circle,rgba(254,44,85,.18) 0%,transparent 70%);
+  top:-120px; left:-120px; animation:d1 9s ease-in-out infinite alternate;
+}
+.bg::after {
+  content:''; position:absolute; width:500px; height:500px;
+  background:radial-gradient(circle,rgba(32,213,236,.14) 0%,transparent 70%);
+  bottom:-120px; right:-120px; animation:d2 11s ease-in-out infinite alternate;
+}
+@keyframes d1 { to { transform:translate(70px,90px); } }
+@keyframes d2 { to { transform:translate(-70px,-90px); } }
+
+/* LOCAL WARNING BANNER */
+#localBanner {
+  display:none; position:fixed; top:0; left:0; right:0; z-index:999;
+  background:#ffbd2e; color:#000; padding:10px 16px;
+  font-size:13px; font-weight:600; text-align:center; line-height:1.5;
+}
+
+#mainScreen {
+  position:relative; z-index:1;
+  display:flex; flex-direction:column; align-items:center; gap:36px;
+}
+.logo { display:flex; align-items:center; gap:10px; }
+.logo-text { font-size:26px; font-weight:800; color:#fff; letter-spacing:-.5px; }
+.btn-wrap { position:relative; }
+.shadow-c {
+  position:absolute; inset:0; border-radius:50px; background:#20d5ec;
+  transform:translate(-4px,-4px); transition:transform .15s;
+}
+.shadow-r {
+  position:absolute; inset:0; border-radius:50px; background:#fe2c55;
+  transform:translate(4px,4px); transition:transform .15s;
+}
+.btn-wrap:hover .shadow-c { transform:translate(-7px,-7px); }
+.btn-wrap:hover .shadow-r { transform:translate(7px,7px); }
+.main-btn {
+  position:relative; z-index:1;
+  display:flex; align-items:center; gap:12px;
+  background:#fff; color:#000; border:none; border-radius:50px;
+  padding:18px 52px; font-size:18px; font-weight:800;
+  cursor:pointer; letter-spacing:.2px; transition:transform .15s;
+}
+.main-btn:active { transform:scale(.97); }
+
+/* OVERLAY */
+#overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.85);
+  backdrop-filter:blur(14px); display:none;
+  align-items:center; justify-content:center; z-index:50;
+}
+#overlay.show { display:flex; }
+
+/* BROWSER */
+.browser {
+  width:92%; max-width:420px; background:#1c1c1e; border-radius:18px;
+  overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,.9);
+  animation:popIn .35s cubic-bezier(.34,1.56,.64,1);
+  display:flex; flex-direction:column;
+}
+@keyframes popIn {
+  from { transform:scale(.75) translateY(30px); opacity:0; }
+  to   { transform:scale(1)   translateY(0);    opacity:1; }
+}
+.b-chrome {
+  background:#2c2c2e; padding:12px 14px;
+  display:flex; align-items:center; gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.06); flex-shrink:0;
+}
+.tls { display:flex; gap:6px; flex-shrink:0; }
+.tl { width:12px; height:12px; border-radius:50%; opacity:.85; }
+.tl-r{background:#ff5f57;} .tl-y{background:#ffbd2e;} .tl-g{background:#28ca41;}
+.addr {
+  flex:1; background:rgba(255,255,255,.07); border-radius:7px;
+  padding:5px 10px; font-size:10.5px; color:rgba(255,255,255,.55);
+  display:flex; align-items:center; gap:6px; overflow:hidden;
+  font-family:"SF Mono",Menlo,monospace;
+}
+.addr-text { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.b-content {
+  position:relative; flex:1;
+  display:flex; align-items:center; justify-content:center;
+  min-height:300px;
+}
+#loadState {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:12px; z-index:2; background:#1c1c1e;
+  padding:20px;
+}
+.spinner {
+  width:34px; height:34px;
+  border:3px solid rgba(255,255,255,.1); border-top-color:#fe2c55;
+  border-radius:50%; animation:spin .8s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+#loadMsg { font-size:12px; color:rgba(255,255,255,.5); text-align:center; }
+#proxyLabel {
+  font-size:10px; color:rgba(255,255,255,.25);
+  font-family:"SF Mono",Menlo,monospace;
+  background:rgba(255,255,255,.05); padding:3px 10px; border-radius:20px;
+}
+#loadError {
+  font-size:12px; color:#ff5f57; display:none;
+  text-align:center; line-height:1.6;
+}
+#localMsg {
+  font-size:12px; color:#ffbd2e; display:none;
+  text-align:center; line-height:1.7;
+}
+
+#realFrame {
+  width:100%; height:300px; border:none; display:none; flex-shrink:0;
+}
+.b-status {
+  background:rgba(255,255,255,.02); border-top:1px solid rgba(255,255,255,.05);
+  padding:7px 14px; font-size:10px; color:rgba(255,255,255,.3);
+  min-height:26px; display:flex; align-items:center; flex-shrink:0;
+}
+.dot {
+  display:inline-block; width:6px; height:6px; border-radius:50%;
+  background:#28ca41; margin-right:6px; vertical-align:middle;
+}
+.dot.red { background:#ff5f57; }
+.dot.yellow { background:#ffbd2e; }
+
+#autoCursor {
+  position:fixed; font-size:26px; pointer-events:none; z-index:200;
+  opacity:0; line-height:1; filter:drop-shadow(0 2px 6px rgba(0,0,0,.8));
+  transition:left .7s cubic-bezier(.25,.46,.45,.94),
+             top .7s cubic-bezier(.25,.46,.45,.94), opacity .3s;
+}
+#autoCursor.visible { opacity:1; }
+#flash {
+  position:fixed; inset:0; background:rgba(32,213,236,.1);
+  z-index:999; opacity:0; pointer-events:none; transition:opacity .25s;
+}
+#flash.on { opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- Aviso: arquivo aberto localmente -->
+<div id="localBanner">
+  ⚠️ Arquivo aberto localmente — hospede no Netlify para o mini browser funcionar.
+</div>
+
+<div class="bg"></div>
+
+<!-- MAIN -->
+<div id="mainScreen">
+  <div class="logo">
+    <svg width="34" height="34" viewBox="0 0 48 48" fill="none">
+      <path d="M34 6c.7 4.2 3.2 7 7 8v6c-2.5 0-4.8-.7-7-2v13c0 7.2-5.8 13-13 13S8 38.2 8 31s5.8-13 13-13c.7 0 1.3.1 2 .2V25c-.7-.2-1.3-.3-2-.3-3.9 0-7 3.1-7 7s3.1 7 7 7 7-3.1 7-7V6h6z" fill="#fff"/>
+    </svg>
+    <span class="logo-text">TikTok</span>
+  </div>
+  <div class="btn-wrap">
+    <div class="shadow-c"></div>
+    <div class="shadow-r"></div>
+    <button class="main-btn" onclick="start()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#000"><path d="M8 5v14l11-7z"/></svg>
+      Abrir no TikTok
+    </button>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div id="overlay">
+  <div class="browser">
+    <div class="b-chrome">
+      <div class="tls">
+        <span class="tl tl-r"></span>
+        <span class="tl tl-y"></span>
+        <span class="tl tl-g"></span>
+      </div>
+      <div class="addr">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="2.5">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <span class="addr-text" id="addrText">tiktoklinksafety.com</span>
+      </div>
+    </div>
+
+    <div class="b-content">
+      <div id="loadState">
+        <div class="spinner" id="spinner"></div>
+        <p id="loadMsg">Conectando...</p>
+        <p id="proxyLabel"></p>
+        <p id="loadError"></p>
+        <p id="localMsg"></p>
+      </div>
+      <iframe
+        id="realFrame"
+        sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-same-origin"
+      ></iframe>
+    </div>
+
+    <div class="b-status" id="statusBar">
+      <span class="dot yellow" id="statusDot"></span>
+      <span id="statusText">Aguardando...</span>
+    </div>
+  </div>
+</div>
+
+<div id="autoCursor">👆</div>
+<div id="flash"></div>
+
+<script>
+const TARGET = 'https://beacons.ai/maitelinks';
+const codes = [
+  "ad","ae","af","ag","ai","al","am","ao","aq","ar","as","at","au","aw","ax","az",
+  "ba","bb","bd","be","bf","bg","bh","bi","bj","bl","bm","bn","bo","bq","br","bs",
+  "bt","bv","bw","by","bz","ca","cc","cd","cf","cg","ch","ci","ck","cl","cm","cn",
+  "co","cr","cu","cv","cw","cx","cy","cz","de","dj","dk","dm","do","dz","ec","ee",
+  "eg","eh","er","es","et","fi","fj","fk","fm","fo","fr","ga","gb","gd","ge","gf",
+  "gg","gh","gi","gl","gm","gn","gp","gq","gr","gs","gt","gu","gw","gy","hk","hm",
+  "hn","hr","ht","hu","id","ie","il","im","in","io","iq","ir","is","it","je","jm",
+  "jo","jp","ke","kg","kh","ki","km","kn","kp","kr","kw","ky","kz","la","lb","lc",
+  "li","lk","lr","ls","lt","lu","lv","ly","ma","mc","md","me","mf","mg","mh","mk",
+  "ml","mm","mn","mo","mp","mq","mr","ms","mt","mu","mv","mw","mx","my","mz","na",
+  "nc","ne","nf","ng","ni","nl","no","np","nr","nu","nz","om","pa","pe","pf","pg",
+  "ph","pk","pl","pm","pn","pr","ps","pt","pw","py","qa","re","ro","rs","ru","rw",
+  "sa","sb","sc","sd","se","sg","sh","si","sj","sk","sl","sm","sn","so","sr","ss",
+  "st","sv","sx","sy","sz","tc","td","tf","tg","th","tj","tk","tl","tm","tn","to",
+  "tr","tt","tv","tw","tz","ua","ug","um","us","uy","uz","va","vc","ve","vg","vi",
+  "vn","vu","wf","ws","ye","yt","za","zm","zw"
+];
+
+// Detecta abertura local (file:// ou content://)
+const isLocal = ['file:', 'content:', 'null'].includes(location.protocol.replace(':','')) || location.href.startsWith('content:');
+if (isLocal) document.getElementById('localBanner').style.display = 'block';
+
+let isFirstLoad = true;
+
+// Timeout helper
+function fetchWithTimeout(url, ms) {
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(id));
+}
+
+// Proxies em ordem de tentativa
+const PROXIES = [
+  { name: 'corsproxy.io', fn: async (u) => {
+    const r = await fetchWithTimeout('https://corsproxy.io/?' + encodeURIComponent(u), 9000);
+    if (!r.ok) throw new Error(r.status);
+    return r.text();
+  }},
+  { name: 'allorigins.win', fn: async (u) => {
+    const r = await fetchWithTimeout('https://api.allorigins.win/get?url=' + encodeURIComponent(u), 9000);
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    return d.contents;
+  }},
+  { name: 'codetabs.com', fn: async (u) => {
+    const r = await fetchWithTimeout('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u), 9000);
+    if (!r.ok) throw new Error(r.status);
+    return r.text();
+  }},
+  { name: 'thingproxy.freeboard', fn: async (u) => {
+    const r = await fetchWithTimeout('https://thingproxy.freeboard.io/fetch/' + encodeURIComponent(u), 9000);
+    if (!r.ok) throw new Error(r.status);
+    return r.text();
+  }}
+];
+
+function setStatus(text, color) {
+  document.getElementById('statusText').textContent = text;
+  var dot = document.getElementById('statusDot');
+  dot.className = 'dot' + (color ? ' ' + color : '');
+}
+
+function buildInjected(targetUrl) {
+  return '<scr' + 'ipt>(function(){'
+    + 'var T="' + targetUrl + '";'
+    + 'function ext(u){return u&&u.startsWith("http")&&u.indexOf("tiktoklinksafety")===-1;}'
+    + 'var _op=window.open;'
+    + 'window.open=function(u,t,f){if(ext(u)){window.parent.postMessage({type:"nav",url:u},"*");return null;}return _op.call(window,u,t,f);};'
+    + 'document.addEventListener("click",function(e){'
+    +   'var el=e.target.closest("a,button,[role=button],[onclick]");if(!el)return;'
+    +   'var h=el.href||el.getAttribute("data-href")||el.getAttribute("data-url")||"";'
+    +   'if(ext(h)){e.preventDefault();e.stopPropagation();window.parent.postMessage({type:"nav",url:h},"*");}'
+    + '},true);'
+    + 'function click(){'
+    +   'var best=null,bs=-1;'
+    +   'document.querySelectorAll("button,a[href],[role=button],[onclick]").forEach(function(el){'
+    +     'var s=window.getComputedStyle(el);'
+    +     'var bg=s.backgroundColor;'
+    +     'var rgb=bg.match(/rgb\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)/);'
+    +     'var txt=el.textContent.toLowerCase().trim();'
+    +     'var sc=0;'
+    +     'if(rgb){var r=+rgb[1],g=+rgb[2],b=+rgb[3];if(r>170&&g<120)sc+=10;}'
+    +     'if(/continue|confirm|proceed|open|yes|ok|sim|confirmar|continuar|abrir|prosseguir|visit|entrar|go/.test(txt))sc+=6;'
+    +     'var rect=el.getBoundingClientRect();'
+    +     'if(rect.width>60&&rect.height>28&&rect.top>=0)sc+=3;'
+    +     'if(sc>bs){bs=sc;best=el;}'
+    +   '});'
+    +   'if(best&&bs>0){'
+    +     'best.scrollIntoView({behavior:"smooth",block:"center"});'
+    +     'setTimeout(function(){'
+    +       'best.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true}));'
+    +       'var h=best.href||best.getAttribute("data-href")||"";'
+    +       'if(ext(h))window.parent.postMessage({type:"nav",url:h},"*");'
+    +     '},700);'
+    +   '}else{setTimeout(function(){window.parent.postMessage({type:"nav",url:T},"*");},2500);}'
+    + '}'
+    + 'if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",function(){setTimeout(click,900);});'
+    + 'else setTimeout(click,900);'
+    + '})();<\/scr' + 'ipt>';
+}
+
+async function start() {
+  if (isLocal) {
+    document.getElementById('overlay').classList.add('show');
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('loadMsg').style.display = 'none';
+    document.getElementById('proxyLabel').style.display = 'none';
+    var lm = document.getElementById('localMsg');
+    lm.style.display = 'block';
+    lm.innerHTML = '⚠️ Arquivo aberto localmente.<br>Hospede no <strong>Netlify</strong> para o mini browser funcionar.<br><br><small style="color:rgba(255,255,255,.3)">Arraste o index.html para app.netlify.com/drop</small>';
+    setStatus('Arquivo local — hospedagem necessária', 'red');
+    return;
+  }
+
+  const code = codes[Math.floor(Math.random() * codes.length)];
+  const safeUrl = 'https://www.tiktoklinksafety.com/link/?aid=1233&lang=' + code
+    + '&scene=link_sticker&jumper_version=1&target=' + encodeURIComponent(TARGET);
+
+  // Reset
+  isFirstLoad = true;
+  var iframe = document.getElementById('realFrame');
+  iframe.src = 'about:blank'; iframe.style.display = 'none';
+  document.getElementById('loadState').style.display = 'flex';
+  document.getElementById('spinner').style.display = 'block';
+  document.getElementById('loadMsg').style.display = 'block';
+  document.getElementById('loadMsg').textContent = 'Conectando...';
+  document.getElementById('proxyLabel').style.display = 'block';
+  document.getElementById('proxyLabel').textContent = '';
+  document.getElementById('loadError').style.display = 'none';
+  document.getElementById('localMsg').style.display = 'none';
+  document.getElementById('addrText').textContent = 'tiktoklinksafety.com/link/?lang=' + code + '...';
+  document.getElementById('autoCursor').classList.remove('visible');
+  document.getElementById('overlay').classList.add('show');
+  setStatus('Buscando página...', 'yellow');
+
+  var html = null;
+  for (var i = 0; i < PROXIES.length; i++) {
+    var p = PROXIES[i];
+    document.getElementById('proxyLabel').textContent = 'tentando ' + p.name + '... (' + (i+1) + '/' + PROXIES.length + ')';
+    setStatus('Proxy: ' + p.name, 'yellow');
+    try {
+      html = await p.fn(safeUrl);
+      if (html && html.length > 100) break;
+    } catch(e) {
+      console.warn(p.name + ' falhou:', e.message);
+    }
+  }
+
+  if (!html || html.length < 100) {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('loadMsg').style.display = 'none';
+    document.getElementById('proxyLabel').style.display = 'none';
+    var err = document.getElementById('loadError');
+    err.style.display = 'block';
+    err.innerHTML = 'Todos os proxies falharam.<br><small style="color:rgba(255,255,255,.3)">Verifique sua conexão ou hospede no Netlify.</small>';
+    setStatus('Erro ao carregar', 'red');
+    return;
+  }
+
+  // Base + injeção
+  var base = '<base href="https://www.tiktoklinksafety.com/">';
+  html = html.replace(/<head[^>]*>/i, '$&' + base);
+  html = html.replace(/<meta[^>]*x-frame-options[^>]*>/gi, '');
+  html = html.replace(/<meta[^>]*content-security-policy[^>]*>/gi, '');
+  var inj = buildInjected(TARGET);
+  html = html.indexOf('</body>') !== -1 ? html.replace('</body>', inj + '</body>') : html + inj;
+
+  var blob = new Blob([html], {type:'text/html; charset=utf-8'});
+  var blobUrl = URL.createObjectURL(blob);
+  setStatus('Renderizando · lang=' + code, 'yellow');
+
+  iframe.onload = function() {
+    if (isFirstLoad) {
+      isFirstLoad = false;
+      URL.revokeObjectURL(blobUrl);
+      document.getElementById('loadState').style.display = 'none';
+      iframe.style.display = 'block';
+      setStatus('Página carregada · clicando automaticamente...', 'green');
+      showCursor(iframe);
+    } else {
+      try {
+        var loc = iframe.contentWindow.location.href;
+        if (loc && loc !== 'about:blank' && loc.indexOf('tiktoklinksafety') === -1) {
+          window.open(loc, '_blank'); closeOverlay();
+        }
+      } catch(e) { window.open(TARGET, '_blank'); closeOverlay(); }
+    }
+  };
+  iframe.src = blobUrl;
+}
+
+function showCursor(iframe) {
+  var cursor = document.getElementById('autoCursor');
+  var rect = iframe.getBoundingClientRect();
+  cursor.style.transition = 'opacity .3s';
+  cursor.style.left = (rect.right - 50) + 'px';
+  cursor.style.top  = (rect.bottom - 50) + 'px';
+  cursor.classList.add('visible');
+  setTimeout(function() {
+    cursor.style.transition = 'left .8s cubic-bezier(.25,.46,.45,.94), top .8s cubic-bezier(.25,.46,.45,.94), opacity .3s';
+    cursor.style.left = (rect.left + rect.width * .5 - 12) + 'px';
+    cursor.style.top  = (rect.top  + rect.height * .72) + 'px';
+  }, 400);
+  setTimeout(function() { cursor.style.fontSize='20px'; setTimeout(function(){cursor.style.fontSize='26px';},200); }, 1400);
+}
+
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'nav') {
+    window.open(e.data.url || TARGET, '_blank');
+    document.getElementById('flash').classList.add('on');
+    setTimeout(function(){document.getElementById('flash').classList.remove('on');}, 300);
+    closeOverlay();
+  }
+});
+
+function closeOverlay() {
+  document.getElementById('autoCursor').classList.remove('visible');
+  setStatus('Link aberto ✓', 'green');
+  setTimeout(function() {
+    document.getElementById('overlay').classList.remove('show');
+    document.getElementById('realFrame').src = 'about:blank';
+    document.getElementById('realFrame').style.display = 'none';
+    document.getElementById('loadState').style.display = 'flex';
+    document.getElementById('spinner').style.display = 'block';
+    document.getElementById('loadMsg').style.display = 'block';
+    document.getElementById('loadMsg').textContent = 'Conectando...';
+    document.getElementById('loadError').style.display = 'none';
+    document.getElementById('localMsg').style.display = 'none';
+    setStatus('Aguardando...', 'yellow');
+  }, 800);
+}
+</script>
+</body>
+</html>
